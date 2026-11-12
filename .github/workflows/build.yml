@@ -1,0 +1,23 @@
+name: Build APK
+on: [push, workflow_dispatch]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Setup Capacitor & Build
+        run: |
+          mkdir www && cp index.html www/
+          npm init -y
+          npm i @capacitor/core @capacitor/cli @capacitor/android @capacitor/filesystem @capacitor/share
+          npx cap init "ParsaMehr" "ir.parsamehr.app" --web-dir=www
+          npx cap add android
+          sed -i 's/<\/manifest>/<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"\/><\/manifest>/' android/app/src/main/AndroidManifest.xml
+          cd android && chmod +x gradlew && ./gradlew assembleDebug
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ParsaMehr-APK
+          path: android/app/build/outputs/apk/debug/app-debug.apk
