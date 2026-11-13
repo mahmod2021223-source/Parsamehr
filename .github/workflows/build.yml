@@ -14,12 +14,23 @@ jobs:
           java-version: '21'
       - name: Setup Capacitor & Build Release
         run: |
+          APP_NAME="ParsaMehr"
+          APP_ID="ir.parsamehr.app"
+          if [ -f "app.txt" ]; then
+            APP_NAME=$(sed -n '1p' app.txt | tr -d '\r\n')
+            APP_ID=$(sed -n '2p' app.txt | tr -d '\r\n')
+          fi
           mkdir www && cp index.html www/
           node -e 'const fs=require("fs");let h=fs.readFileSync("www/index.html","utf8");h=h.replace("if(/\\bwv\\b/.test(navigator.userAgent)||","if(false&&");h=h.replace("if(/\\bwv\\b/.test(navigator.userAgent)&&!dkNat())","if(false)");fs.writeFileSync("www/index.html",h);'
           npm init -y
           npm i @capacitor/core @capacitor/cli @capacitor/android @capacitor/filesystem @capacitor/share
-          npx cap init "ParsaMehr" "ir.parsamehr.app" --web-dir=www
+          npx cap init "$APP_NAME" "$APP_ID" --web-dir=www
           npx cap add android
+          if [ -f "icon.png" ]; then
+            mkdir -p assets
+            cp icon.png assets/icon-only.png
+            npx @capacitor/assets generate --android
+          fi
           sed -i 's/<\/manifest>/<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"\/><uses-permission android:name="android.permission.READ_MEDIA_IMAGES"\/><\/manifest>/' android/app/src/main/AndroidManifest.xml
           keytool -genkey -v -keystore android/app/release.keystore -alias parsamehr -keyalg RSA -keysize 2048 -validity 10000 -storepass parsamehr123 -keypass parsamehr123 -dname "CN=ParsaMehr, OU=Mobile, O=ParsaMehr, L=Tehran, S=Tehran, C=IR"
           cd android && chmod +x gradlew
