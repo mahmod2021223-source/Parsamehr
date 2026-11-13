@@ -15,13 +15,22 @@ jobs:
       - name: Setup Capacitor & Build
         run: |
           mkdir www && cp index.html www/
-          node -e '
-            const fs = require("fs");
-            let h = fs.readFileSync("www/index.html", "utf8");
-            h = h.replace(/function rDial\(n\)\{[\s\S]*?location\.href=\x27tel:\x27\+n\}\}/, "function rDial(n){try{const N=window.PMNative;if(N&&typeof N.callPhone==\"function\"&&/^ok/.test(String(N.callPhone(n))))return}catch(e){}window.open(\"tel:\"+n,\"_system\")}");
-            h = h.replace(/if\(\/\\bwv\\b\/\.test\(navigator\.userAgent\)&&!dkNat\(\)\)throw new Error\([^)]+\);/, "");
-            fs.writeFileSync("www/index.html", h);
-          '
+          cat << 'EOF' > patch.js
+          const fs = require('fs');
+          let h = fs.readFileSync('www/index.html', 'utf8');
+          const i1 = h.indexOf('function rDial(n){');
+          const i2 = h.indexOf('function rCall(ph){', i1);
+          if (i1 !== -1 && i2 !== -1) {
+            h = h.slice(0, i1) + 'function rDial(n){try{const N=window.PMNative;if(N&&typeof N.callPhone=="function"&&/^ok/.test(String(N.callPhone(n))))return}catch(e){}location.href="tel:"+n}\n' + h.slice(i2);
+          }
+          const i3 = h.indexOf('if(/\\bwv\\b/.test(navigator.userAgent)&&!dkNat())throw new Error(');
+          if (i3 !== -1) {
+            const i4 = h.indexOf(');', i3);
+            if (i4 !== -1) h = h.slice(0, i3) + h.slice(i4 + 2);
+          }
+          fs.writeFileSync('www/index.html', h);
+          EOF
+          node patch.js
           npm init -y
           npm i @capacitor/core @capacitor/cli @capacitor/android @capacitor/filesystem @capacitor/share @capacitor/browser
           npx cap init "ParsaMehr" "ir.parsamehr.app" --web-dir=www
