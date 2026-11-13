@@ -1,4 +1,4 @@
-name: Build APK
+name: Build Release App
 on: [push, workflow_dispatch]
 jobs:
   build:
@@ -12,7 +12,7 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '21'
-      - name: Setup Capacitor & Build
+      - name: Setup Capacitor & Build Release
         run: |
           mkdir www && cp index.html www/
           node -e 'const fs=require("fs");let h=fs.readFileSync("www/index.html","utf8");h=h.replace("if(/\\bwv\\b/.test(navigator.userAgent)||","if(false&&");h=h.replace("if(/\\bwv\\b/.test(navigator.userAgent)&&!dkNat())","if(false)");fs.writeFileSync("www/index.html",h);'
@@ -21,8 +21,16 @@ jobs:
           npx cap init "ParsaMehr" "ir.parsamehr.app" --web-dir=www
           npx cap add android
           sed -i 's/<\/manifest>/<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"\/><uses-permission android:name="android.permission.READ_MEDIA_IMAGES"\/><\/manifest>/' android/app/src/main/AndroidManifest.xml
-          cd android && chmod +x gradlew && ./gradlew assembleDebug
+          keytool -genkey -v -keystore android/app/release.keystore -alias parsamehr -keyalg RSA -keysize 2048 -validity 10000 -storepass parsamehr123 -keypass parsamehr123 -dname "CN=ParsaMehr, OU=Mobile, O=ParsaMehr, L=Tehran, S=Tehran, C=IR"
+          cd android && chmod +x gradlew
+          ./gradlew assembleRelease bundleRelease
+          jarsigner -verbose -sigalg SHA256withRSA -digestalg SHA-256 -keystore app/release.keystore -storepass parsamehr123 -keypass parsamehr123 app/build/outputs/apk/release/app-release-unsigned.apk parsamehr
+          $ANDROID_HOME/build-tools/$(ls $ANDROID_HOME/build-tools | tail -n 1)/zipalign -v 4 app/build/outputs/apk/release/app-release-unsigned.apk app/build/outputs/apk/release/ParsaMehr-Market.apk
+          jarsigner -verbose -sigalg SHA256withRSA -digestalg SHA-256 -keystore app/release.keystore -storepass parsamehr123 -keypass parsamehr123 app/build/outputs/bundle/release/app-release.aab parsamehr
       - uses: actions/upload-artifact@v4
         with:
-          name: ParsaMehr-APK
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+          name: ParsaMehr-Store-Release
+          path: |
+            android/app/build/outputs/apk/release/ParsaMehr-Market.apk
+            android/app/build/outputs/bundle/release/app-release.aab
+            android/app/release.keystore
