@@ -15,9 +15,9 @@ jobs:
       - name: Setup Capacitor & Build
         run: |
           mkdir www && cp index.html www/
-          python3 -c 'h=open("www/index.html",encoding="utf-8").read();i1=h.find("function rDial(n){");i2=h.find("function rCall(ph){",i1);h=h[:i1]+"function rDial(n){location.href=\"tel:\"+n}\n"+h[i2:] if i1>0 and i2>i1 else h;i3=h.find("if(/\\bwv\\b/.test(navigator.userAgent)&&!dkNat())throw new Error(");i4=h.find(");",i3);h=h[:i3]+h[i4+2:] if i3>0 and i4>i3 else h;open("www/index.html","w",encoding="utf-8").write(h)'
+          node -e 'const fs=require("fs");let h=fs.readFileSync("www/index.html","utf8");h=h.replace("if(/\\bwv\\b/.test(navigator.userAgent)||","if(false&&");h=h.replace("if(/\\bwv\\b/.test(navigator.userAgent)&&!dkNat())","if(false)");fs.writeFileSync("www/index.html",h);'
           npm init -y
-          npm i @capacitor/core @capacitor/cli @capacitor/android @capacitor/filesystem @capacitor/share @capacitor/browser
+          npm i @capacitor/core @capacitor/cli @capacitor/android @capacitor/filesystem @capacitor/share
           npx cap init "ParsaMehr" "ir.parsamehr.app" --web-dir=www
           npx cap add android
           sed -i 's/<\/manifest>/<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"\/><uses-permission android:name="android.permission.READ_MEDIA_IMAGES"\/><\/manifest>/' android/app/src/main/AndroidManifest.xml
