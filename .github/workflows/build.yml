@@ -15,11 +15,18 @@ jobs:
       - name: Setup Capacitor & Build
         run: |
           mkdir www && cp index.html www/
+          node -e '
+            const fs = require("fs");
+            let h = fs.readFileSync("www/index.html", "utf8");
+            h = h.replace(/function rDial\(n\)\{[\s\S]*?location\.href=\x27tel:\x27\+n\}\}/, "function rDial(n){try{const N=window.PMNative;if(N&&typeof N.callPhone==\"function\"&&/^ok/.test(String(N.callPhone(n))))return}catch(e){}window.open(\"tel:\"+n,\"_system\")}");
+            h = h.replace(/if\(\/\\bwv\\b\/\.test\(navigator\.userAgent\)&&!dkNat\(\)\)throw new Error\([^)]+\);/, "");
+            fs.writeFileSync("www/index.html", h);
+          '
           npm init -y
-          npm i @capacitor/core @capacitor/cli @capacitor/android @capacitor/filesystem @capacitor/share
+          npm i @capacitor/core @capacitor/cli @capacitor/android @capacitor/filesystem @capacitor/share @capacitor/browser
           npx cap init "ParsaMehr" "ir.parsamehr.app" --web-dir=www
           npx cap add android
-          sed -i 's/<\/manifest>/<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"\/><\/manifest>/' android/app/src/main/AndroidManifest.xml
+          sed -i 's/<\/manifest>/<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"\/><uses-permission android:name="android.permission.READ_MEDIA_IMAGES"\/><\/manifest>/' android/app/src/main/AndroidManifest.xml
           cd android && chmod +x gradlew && ./gradlew assembleDebug
       - uses: actions/upload-artifact@v4
         with:
