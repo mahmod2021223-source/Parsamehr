@@ -14,11 +14,13 @@ jobs:
           java-version: '21'
       - name: Setup Capacitor & Build Release
         run: |
-          APP_NAME="ParsaMehr"
-          APP_ID="ir.parsamehr.app"
+          APP_NAME="مستر حساب ۲"
+          APP_ID="ir.parsamehr.v2"
           if [ -f "app.txt" ]; then
-            APP_NAME=$(sed -n '1p' app.txt | tr -d '\r\n')
-            APP_ID=$(sed -n '2p' app.txt | tr -d '\r\n')
+            LINE1=$(sed -n '1p' app.txt | tr -d '\r\n' | xargs)
+            LINE2=$(sed -n '2p' app.txt | tr -d '\r\n' | tr -d ' ')
+            [ -n "$LINE1" ] && APP_NAME="$LINE1"
+            [ -n "$LINE2" ] && APP_ID="$LINE2"
           fi
           mkdir www && cp index.html www/
           node -e 'const fs=require("fs");let h=fs.readFileSync("www/index.html","utf8");h=h.replace("if(/\\bwv\\b/.test(navigator.userAgent)||","if(false&&");h=h.replace("if(/\\bwv\\b/.test(navigator.userAgent)&&!dkNat())","if(false)");fs.writeFileSync("www/index.html",h);'
