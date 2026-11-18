@@ -42,7 +42,11 @@ jobs:
             done
           fi
           sed -i 's/<\/manifest>/<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"\/><uses-permission android:name="android.permission.READ_MEDIA_IMAGES"\/><uses-permission android:name="android.permission.USE_BIOMETRIC"\/><uses-permission android:name="android.permission.USE_FINGERPRINT"\/><\/manifest>/' android/app/src/main/AndroidManifest.xml
-          keytool -genkey -v -keystore android/app/release.keystore -alias parsamehr -keyalg RSA -keysize 2048 -validity 10000 -storepass parsamehr123 -keypass parsamehr123 -dname "CN=ParsaMehr, OU=Mobile, O=ParsaMehr, L=Tehran, S=Tehran, C=IR"
+          if [ -f "release.keystore" ]; then
+            cp release.keystore android/app/release.keystore
+          else
+            keytool -genkey -v -keystore android/app/release.keystore -alias parsamehr -keyalg RSA -keysize 2048 -validity 10000 -storepass parsamehr123 -keypass parsamehr123 -dname "CN=ParsaMehr, OU=Mobile, O=ParsaMehr, L=Tehran, S=Tehran, C=IR"
+          fi
           cd android && chmod +x gradlew
           ./gradlew assembleRelease bundleRelease
           BUILD_TOOLS=$ANDROID_HOME/build-tools/$(ls $ANDROID_HOME/build-tools | tail -n 1)
