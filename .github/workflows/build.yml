@@ -25,7 +25,7 @@ jobs:
           mkdir www && cp index.html www/
           node -e 'const fs=require("fs");let h=fs.readFileSync("www/index.html","utf8");h=h.replace("if(/\\bwv\\b/.test(navigator.userAgent)||","if(false&&");h=h.replace("if(/\\bwv\\b/.test(navigator.userAgent)&&!dkNat())","if(false)");fs.writeFileSync("www/index.html",h);'
           npm init -y
-          npm i @capacitor/core @capacitor/cli @capacitor/android @capacitor/filesystem @capacitor/share @capacitor/camera capacitor-native-biometric
+          npm i @capacitor/core @capacitor/cli @capacitor/android @capacitor/filesystem @capacitor/share capacitor-native-biometric
           npx cap init "$APP_NAME" "$APP_ID" --web-dir=www
           npx cap add android
           npx cap sync android
